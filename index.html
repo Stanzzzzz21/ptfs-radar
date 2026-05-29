@@ -33,7 +33,7 @@
         async function refreshRadarDisplay() {
             try {
                 // EDIT THIS LINE when hosting live: replace with your Render server URL
-                const response = await fetch('http://localhost:5000/api/map-state');
+                const response = await fetch('https://ptfs-live-radar.onrender.com/api/flight-data');
                 const data = await response.json();
 
                 planesGroup.clearLayers();
