@@ -1,105 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PTFS Live Flight Radar</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet core styles -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
+
+    <!-- App styles -->
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
+    <!-- Map container -->
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Set up standard flat X/Y grid coordinate mapping space
-        const map = L.map('map', {
-            crs: L.CRS.Simple,
-            minZoom: -5,
-            maxZoom: 1,
-            zoom: -3,
-            center: [0, 0]
-        });
+    <!-- Leaflet core script -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
 
-        const planesGroup = L.layerGroup().addTo(map);
-        const airportsGroup = L.layerGroup().addTo(map);
-        const pathsGroup = L.layerGroup().addTo(map);
-
-        let airportsLoaded = false;
-
-        async function refreshRadarDisplay() {
-            try {
-                // FIXED: Changed url to ptfs-backend to match your active deployment name
-                const response = await fetch('https://ptfs-backend.onrender.com/api/map-state');
-                const data = await response.json();
-
-                planesGroup.clearLayers();
-                pathsGroup.clearLayers();
-
-                // 1. Draw your full airport layout profile
-                if (!airportsLoaded) {
-                    for (const [icao, coord] of Object.entries(data.airports)) {
-                        L.rectangle([[coord.y - 120, coord.x - 120], [coord.y + 120, coord.x + 120]], {
-                            color: '#94A3B8',
-                            fillColor: '#334155',
-                            fillOpacity: 0.7
-                        }).addTo(airportsGroup)
-                          .bindTooltip(`📍 [${icao}] ${coord.name}`, { permanent: true, direction: 'bottom' });
-                    }
-                    airportsLoaded = true;
-                }
-
-                // 2. Plot aircraft symbols and flight lines
-                data.planes.forEach(plane => {
-                    const trackingCoords = [plane.y, plane.x];
-                    const trackingColor = plane.emergency ? '#EF4444' : '#2DD4BF';
-
-                    const textLabel = `
-                        <div style="color: ${trackingColor};">${plane.callsign}</div>
-                        <div style="font-weight:normal; font-size:10px; margin-top:2px; opacity:0.85;">
-                            ${plane.aircraft}<br>
-                            ALT: <b>${plane.altitude} FT</b> | SPD: <b>${plane.groundSpeed} KT</b>
-                        </div>
-                    `;
-
-                    const blipMarker = L.circleMarker(trackingCoords, {
-                        radius: 5,
-                        color: trackingColor,
-                        fillColor: trackingColor,
-                        fillOpacity: 1
-                    });
-
-                    blipMarker.bindTooltip(textLabel, {
-                        permanent: true,
-                        direction: 'top',
-                        className: `fr24-tag ${plane.emergency ? 'emergency-pulse' : ''}`,
-                        offset: [0, -6]
-                    });
-
-                    planesGroup.addLayer(blipMarker);
-
-                    // 3. Render approach vectors connecting the paths to nearest fields
-                    if (plane.closestAirport !== "None") {
-                        const airfieldHub = data.airports[plane.closestAirport];
-                        const arrivalVectorLine = L.polyline([[plane.y, plane.x], [airfieldHub.y, airfieldHub.x]], {
-                            color: trackingColor,
-                            weight: 1,
-                            dashArray: '4, 8', 
-                            opacity: 0.35
-                        });
-                        pathsGroup.addLayer(arrivalVectorLine);
-                    }
-                });
-
-            } catch (err) {
-                console.log("Connection sync state waiting for backend pipeline...");
-            }
-        }
-
-        setInterval(refreshRadarDisplay, 1000);
-        refreshRadarDisplay();
-    </script>
+    <!-- App logic -->
+    <script src="app.js"></script>
 </body>
 </html>
