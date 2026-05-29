@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTFS Live Flight Radar</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Set up standard flat X/Y grid coordinate mapping space
+        const map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: -5,
+            maxZoom: 1,
+            zoom: -3,
+            center: [0, 0]
+        });
+
+        const planesGroup = L.layerGroup().addTo(map);
+        const airportsGroup = L.layerGroup().addTo(map);
+        const pathsGroup = L.layerGroup().addTo(map);
+
+        let airportsLoaded = false;
+
+        async function refreshRadarDisplay() {
+            try {
+                // EDIT THIS LINE when hosting live: replace with your Render server URL
+                const response = await fetch('http://localhost:5000/api/map-state');
+                const data = await response.json();
+
+                planesGroup.clearLayers();
+                pathsGroup.clearLayers();
+
+                // 1. Draw your full airport layout profile
+                if (!airportsLoaded) {
+                    for (const [icao, coord] of Object.entries(data.airports)) {
+                        L.rectangle([[coord.y - 120, coord.x - 120], [coord.y + 120, coord.x + 120]], {
+                            color: '#94A3B8',
+                            fillColor: '#334155',
+                            fillOpacity: 0.7
+                        }).addTo(airportsGroup)
+                          .bindTooltip(`📍 [${icao}] ${coord.name}`, { permanent: true, direction: 'bottom' });
+                    }
+                    airportsLoaded = true;
+                }
+
+                // 2. Plot aircraft symbols and flight lines
+                data.planes.forEach(plane => {
+                    const trackingCoords = [plane.y, plane.x];
+                    const trackingColor = plane.emergency ? '#EF4444' : '#2DD4BF';
+
+                    const textLabel = `
+                        <div style="color: ${trackingColor};">${plane.callsign}</div>
+                        <div style="font-weight:normal; font-size:10px; margin-top:2px; opacity:0.85;">
+                            ${plane.aircraft}<br>
+                            ALT: <b>${plane.altitude} FT</b> | SPD: <b>${plane.groundSpeed} KT</b>
+                        </div>
+                    `;
+
+                    const blipMarker = L.circleMarker(trackingCoords, {
+                        radius: 5,
+                        color: trackingColor,
+                        fillColor: trackingColor,
+                        fillOpacity: 1
+                    });
+
+                    blipMarker.bindTooltip(textLabel, {
+                        permanent: true,
+                        direction: 'top',
+                        className: `fr24-tag ${plane.emergency ? 'emergency-pulse' : ''}`,
+                        offset: [0, -6]
+                    });
+
+                    planesGroup.addLayer(blipMarker);
+
+                    // 3. Render approach vectors connecting the paths to nearest fields
+                    if (plane.closestAirport !== "None") {
+                        const airfieldHub = data.airports[plane.closestAirport];
+                        const arrivalVectorLine = L.polyline([[plane.y, plane.x], [airfieldHub.y, airfieldHub.x]], {
+                            color: trackingColor,
+                            weight: 1,
+                            dashArray: '4, 8', 
+                            opacity: 0.35
+                        });
+                        pathsGroup.addLayer(arrivalVectorLine);
+                    }
+                });
+
+            } catch (err) {
+                console.log("Connection sync state waiting for backend pipeline...");
+            }
+        }
+
+        setInterval(refreshRadarDisplay, 1000);
+        refreshRadarDisplay();
+    </script>
+</body>
+</html>
