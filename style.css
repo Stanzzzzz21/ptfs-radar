@@ -1,21 +1,22 @@
+/* Reset + full-screen layout */
 html, body, #map {
     margin: 0;
     padding: 0;
-    width: 10%;
-    height: 10vh;
-    background-color: #FFFFFFFFF; /* Dark cyber theme background */
+    width: 100%;
+    height: 100vh;
+    background-color: #0f172a; /* Dark cyber theme */
 }
 
-/* Map frame element container */
+/* Map container */
 #map { 
     width: 100%; 
     height: 100vh; 
 }
 
-/* Flightradar24 custom streaming label layout */
+/* Flightradar24-style aircraft labels */
 .fr24-tag {
     background: rgba(15, 23, 42, 0.9);
-    border: 1px solid #2DD4BF; /* Neon Teal */
+    border: 1px solid #2DD4BF; /* Neon teal */
     color: #ffffff;
     border-radius: 4px;
     padding: 4px 8px;
@@ -25,8 +26,9 @@ html, body, #map {
     box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 
-/* Red alert glow for Squawk 7700 emergencies */
+/* Emergency squawk 7700 pulse */
 .fr24-tag.emergency-pulse {
-    border-color: #EF4444; 
+    border-color: #EF4444;
     box-shadow: 0 0 10px #EF4444;
 }
+
