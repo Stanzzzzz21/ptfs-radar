@@ -6,7 +6,6 @@
     <title>PTFS Live Flight Radar</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -32,8 +31,8 @@
 
         async function refreshRadarDisplay() {
             try {
-// Make sure it uses your RENDER link, not localhost!
- const response = await fetch('https://ptfs-radar.onrender.com/api/map-state');
+                // FIXED: Changed url to ptfs-backend to match your active deployment name
+                const response = await fetch('https://ptfs-backend.onrender.com/api/map-state');
                 const data = await response.json();
 
                 planesGroup.clearLayers();
