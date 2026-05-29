@@ -1,7 +1,10 @@
 const express = require('express');
-const WebSocket = require('ws');
-const cors = require('cors');
-const fetch = require('node-fetch');
+const cors = require('cors'); // 1. ADD THIS LINE
+const app = express();
+
+app.use(cors()); // 2. ADD THIS LINE RIGHT HERE (Allows all origins to connect)
+
+// ... the rest of your routes like app.get('/api/map-state') stay below here
 
 const app = express();
 const PORT = process.env.PORT || 5000;
